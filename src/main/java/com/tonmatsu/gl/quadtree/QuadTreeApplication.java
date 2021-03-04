@@ -1,15 +1,15 @@
 package com.tonmatsu.gl.quadtree;
 
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.system.MemoryStack.*;
+import static org.lwjgl.system.MemoryUtil.*;
+
 import com.tonmatsu.gl.quadtree.commons.*;
 import com.tonmatsu.gl.quadtree.core.*;
 import com.tonmatsu.gl.quadtree.renderer.*;
 import org.joml.*;
 import org.lwjgl.opengl.*;
-
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryStack.*;
-import static org.lwjgl.system.MemoryUtil.*;
 
 public class QuadTreeApplication {
     private static final String TITLE = "Quad Tree";
@@ -73,7 +73,7 @@ public class QuadTreeApplication {
         viewport = new int[]{0, 0, WIDTH, HEIGHT};
         projectionMatrix = new Matrix4f();
         mousePosition = new Vector3f();
-        quadTree = new QuadTree(new AABB(new Point(0, 0), 0.5f * HEIGHT, 0.5f * HEIGHT), 10);
+        quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * HEIGHT - 1, 0.5f * HEIGHT - 1), 10);
         renderer = new QuadTreeRenderer();
 
         final var w = WIDTH / 2;
@@ -94,6 +94,11 @@ public class QuadTreeApplication {
         }
         if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
             quadTree.clear();
+            renderer.update(quadTree);
+        }
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            quadTree.clear();
+            quadTree.color = new Vector3f(0.5f, 0.7f, 0.2f);
             renderer.update(quadTree);
         }
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
