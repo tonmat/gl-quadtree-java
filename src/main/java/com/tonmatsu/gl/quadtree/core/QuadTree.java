@@ -35,6 +35,12 @@ public class QuadTree {
     }
 
     public boolean insert(Circle circle) {
+        if (circle.contains(boundary)) {
+            divided = false;
+            this.color = new Vector3f(0.5f, 0.7f, 0.2f);
+            return true;
+        }
+
         if (!boundary.intersects(circle))
             return false;
 
@@ -58,6 +64,12 @@ public class QuadTree {
     }
 
     public boolean remove(Circle circle) {
+        if (circle.contains(boundary)) {
+            divided = false;
+            this.color = null;
+            return true;
+        }
+
         if (!boundary.intersects(circle))
             return false;
 

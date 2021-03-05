@@ -87,7 +87,6 @@ public class QuadTreeApplication {
         cameraPosition = new Vector3f();
         cameraPositionTarget = new Vector3f();
         cameraZoomTarget = 1;
-        cameraZoomTarget = 1;
         projectionMatrix = new Matrix4f();
         viewMatrix = new Matrix4f();
         vpMatrix = new Matrix4f();
@@ -95,7 +94,7 @@ public class QuadTreeApplication {
         mouseLastPosition = new Vector3f();
         mouseWorldPosition = new Vector3f();
         mouseWorldLastPosition = new Vector3f();
-        quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * HEIGHT - 1, 0.5f * HEIGHT - 1), 10);
+        quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * HEIGHT - 1, 0.5f * HEIGHT - 1), 12);
         renderer = new QuadTreeRenderer();
         renderer.update(quadTree);
 
