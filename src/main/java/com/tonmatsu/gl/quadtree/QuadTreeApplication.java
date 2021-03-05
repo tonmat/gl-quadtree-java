@@ -14,8 +14,8 @@ import org.lwjgl.opengl.*;
 
 public class QuadTreeApplication {
     private static final String TITLE = "Quad Tree";
-    private static final int WIDTH = 1280;
-    private static final int HEIGHT = 720;
+    private static final int WIDTH = 1920;
+    private static final int HEIGHT = 1080-64;
     private long window;
     private FPSMeter fpsMeter;
     private Interval fpsShowInterval;
@@ -94,7 +94,7 @@ public class QuadTreeApplication {
         mouseLastPosition = new Vector3f();
         mouseWorldPosition = new Vector3f();
         mouseWorldLastPosition = new Vector3f();
-        quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * HEIGHT - 1, 0.5f * HEIGHT - 1), 12);
+        quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * HEIGHT - 2, 0.5f * HEIGHT - 2), 12);
         renderer = new QuadTreeRenderer();
         renderer.update(quadTree);
 
