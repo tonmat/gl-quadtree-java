@@ -1,5 +1,6 @@
 package com.tonmatsu.gl.quadtree;
 
+import static org.joml.Math.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryStack.*;
@@ -19,10 +20,20 @@ public class QuadTreeApplication {
     private FPSMeter fpsMeter;
     private Interval fpsShowInterval;
     private int[] viewport;
+    private Vector3f cameraPosition;
+    private Vector3f cameraPositionTarget;
+    private float cameraZoom;
+    private float cameraZoomTarget;
     private Matrix4f projectionMatrix;
+    private Matrix4f viewMatrix;
+    private Matrix4f vpMatrix;
     private Vector3f mousePosition;
+    private Vector3f mouseLastPosition;
+    private Vector3f mouseWorldPosition;
+    private Vector3f mouseWorldLastPosition;
     private QuadTree quadTree;
     private QuadTreeRenderer renderer;
+    private final Vector3f vec3 = new Vector3f();
 
     public static void main(String[] args) {
         new QuadTreeApplication().run();
@@ -47,6 +58,7 @@ public class QuadTreeApplication {
         glClearColor(0.1f, 0.12f, 0.14f, 1.0f);
         glViewport(0, 0, WIDTH, HEIGHT);
         init();
+        glfwSetScrollCallback(window, this::handleScrollCallback);
         glfwShowWindow(window);
         var lastUpdateTime = 0.0;
         while (!glfwWindowShouldClose(window)) {
@@ -58,6 +70,7 @@ public class QuadTreeApplication {
             render();
             glfwSwapBuffers(window);
         }
+        glfwSetScrollCallback(window, null);
         dispose();
         glfwDestroyWindow(window);
         glfwTerminate();
@@ -71,48 +84,90 @@ public class QuadTreeApplication {
             glfwSetWindowTitle(window, title);
         });
         viewport = new int[]{0, 0, WIDTH, HEIGHT};
+        cameraPosition = new Vector3f();
+        cameraPositionTarget = new Vector3f();
+        cameraZoomTarget = 1;
+        cameraZoomTarget = 1;
         projectionMatrix = new Matrix4f();
+        viewMatrix = new Matrix4f();
+        vpMatrix = new Matrix4f();
         mousePosition = new Vector3f();
+        mouseLastPosition = new Vector3f();
+        mouseWorldPosition = new Vector3f();
+        mouseWorldLastPosition = new Vector3f();
         quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * HEIGHT - 1, 0.5f * HEIGHT - 1), 10);
         renderer = new QuadTreeRenderer();
+        renderer.update(quadTree);
 
         final var w = WIDTH / 2;
         final var h = HEIGHT / 2;
         projectionMatrix.ortho(-w, w, -h, h, 0, 1);
-        glOrtho(-w, w, -h, h, 0, 1);
-        renderer.setMVP(projectionMatrix);
+    }
+
+    private void handleScrollCallback(long window, double xoffset, double yoffset) {
+        if (yoffset < 0)
+            if (cameraZoomTarget <= 1)
+                return;
+        if (yoffset > 0) {
+            if (cameraZoomTarget >= 16)
+                return;
+        }
+        cameraZoomTarget = clamp(1, 16, cameraZoomTarget + 0.5f * (float) yoffset * cameraZoomTarget);
     }
 
     private void update(float delta) {
         fpsMeter.update(delta);
         fpsShowInterval.update(delta);
+
         try (final var stack = stackPush()) {
-            final var xpos = stack.callocDouble(1);
-            final var ypos = stack.callocDouble(1);
+            final var xpos = stack.mallocDouble(1);
+            final var ypos = stack.mallocDouble(1);
             glfwGetCursorPos(window, xpos, ypos);
-            projectionMatrix.unproject((float) xpos.get(), HEIGHT - (float) ypos.get(), 0, viewport, mousePosition);
+            mousePosition.set((float) xpos.get(), HEIGHT - (float) ypos.get(), 0.0f);
         }
+        vpMatrix.unproject(mousePosition, viewport, mouseWorldPosition);
+
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
+            vec3.set(mousePosition).sub(mouseLastPosition);
+            cameraPositionTarget.fma(-1.0f / cameraZoom, vec3);
+        }
+
         if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+            cameraPositionTarget.zero();
+            cameraZoomTarget = 1;
             quadTree.clear();
             renderer.update(quadTree);
         }
         if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            cameraPositionTarget.zero();
+            cameraZoomTarget = 1;
             quadTree.clear();
             quadTree.color = new Vector3f(0.5f, 0.7f, 0.2f);
             renderer.update(quadTree);
         }
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            final var circle = new Circle(new Point(mousePosition.x, mousePosition.y), 32);
+            final var circle = new Circle(new Point(mouseWorldPosition.x, mouseWorldPosition.y), 32.0f / cameraZoom);
             quadTree.insert(circle);
             quadTree.normalize(circle);
             renderer.update(quadTree);
         }
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-            final var circle = new Circle(new Point(mousePosition.x, mousePosition.y), 32);
+            final var circle = new Circle(new Point(mouseWorldPosition.x, mouseWorldPosition.y), 32 / cameraZoom);
             quadTree.remove(circle);
             quadTree.normalize(circle);
             renderer.update(quadTree);
         }
+
+        cameraPosition.lerp(cameraPositionTarget, clamp(0, 1, 16.0f * delta));
+        cameraZoom = lerp(cameraZoom, cameraZoomTarget, clamp(0, 1, 16.0f * delta));
+        viewMatrix.identity()
+                .scale(cameraZoom)
+                .translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z);
+        projectionMatrix.mul(viewMatrix, vpMatrix);
+        renderer.setMVP(vpMatrix);
+
+        mouseLastPosition.set(mousePosition);
+        mouseWorldLastPosition.set(mouseWorldPosition);
     }
 
     private void render() {
