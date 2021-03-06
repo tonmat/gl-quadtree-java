@@ -4,13 +4,12 @@ layout (location = 0) in vec3 a_pos_color;
 
 uniform mat4 u_mvp;
 
-out vec4 v_color;
+out vec3 v_color;
 
 vec4 unpackColor(float f) {
     vec4 color;
-    float t;
 
-    t = f * 64.0;
+    float t = f * 64.0;
     color.r = floor(t);
     t = (t - color.r) * 64.0;
     color.g = floor(t);
@@ -28,6 +27,7 @@ vec4 unpackColor(float f) {
 }
 
 void main() {
-    gl_Position = u_mvp * vec4(a_pos_color.xy, 0.0, 1.0);
-    v_color = unpackColor(a_pos_color.z);
+    vec4 color = unpackColor(a_pos_color.z);
+    gl_Position = u_mvp * vec4(a_pos_color.xy, color.a, 1.0);
+    v_color = color.rgb;
 }

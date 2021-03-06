@@ -12,7 +12,7 @@ import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 public class QuadTreeVertexArray {
-    private static final Vector3f WHITE = new Vector3f(1.0f, 1.0f, 1.0f);
+    private static final Vector3f COLOR = new Vector3f(0.14f, 0.16f, 0.18f);
     private final VertexArray vao;
     private final VertexBuffer vbo;
     private final IndexBuffer ibo;
@@ -37,7 +37,7 @@ public class QuadTreeVertexArray {
     }
 
     public void update(QuadTree quadTree) {
-        count = quadTree.count();
+        count = quadTree.countLeaves();
         if (count > capacity) {
             var newCapacity = capacity;
             while (count > newCapacity)
@@ -85,34 +85,35 @@ public class QuadTreeVertexArray {
     }
 
     private void add(QuadTree quadTree) {
-        var color = WHITE;
-        var alpha = 0.1f;
-        if (quadTree.color != null) {
-            color = quadTree.color;
-            alpha = 1.0f;
+        if (!quadTree.divided) {
+            var color = COLOR;
+            var zIndex = 0.0f;
+            if (quadTree.color != null) {
+                color = quadTree.color;
+                zIndex = 1.0f;
+            }
+            final var e = quadTree.boundary.east();
+            final var w = quadTree.boundary.west();
+            final var n = quadTree.boundary.north();
+            final var s = quadTree.boundary.south();
+            final var c = packColor(color.x, color.y, color.z, zIndex);
+            vertices.putFloat(w).putFloat(s).putFloat(c);
+            vertices.putFloat(e).putFloat(s).putFloat(c);
+            vertices.putFloat(e).putFloat(n).putFloat(c);
+            vertices.putFloat(w).putFloat(n).putFloat(c);
+            return;
         }
-        final var e = quadTree.boundary.east();
-        final var w = quadTree.boundary.west();
-        final var n = quadTree.boundary.north();
-        final var s = quadTree.boundary.south();
-        final var c = packColor(color.x, color.y, color.z, alpha);
-        vertices.putFloat(w).putFloat(s).putFloat(c);
-        vertices.putFloat(e).putFloat(s).putFloat(c);
-        vertices.putFloat(e).putFloat(n).putFloat(c);
-        vertices.putFloat(w).putFloat(n).putFloat(c);
 
-        if (quadTree.divided) {
-            add(quadTree.ne);
-            add(quadTree.nw);
-            add(quadTree.sw);
-            add(quadTree.se);
-        }
+        add(quadTree.ne);
+        add(quadTree.nw);
+        add(quadTree.sw);
+        add(quadTree.se);
     }
 
-    private static float packColor(float r, float g, float b, float a) {
+    private static float packColor(float r, float g, float b, float zIndex) {
         return floor(63.0f * r) / 64.0f +
                 floor(63.0f * g) / 4096.0f +
-                floor(63.0f * b) / 262144.0f +
-                floor(31.0f * a) / 8388608.0f;
+                floor(63.0f * b) / 262144.0f+
+                floor(31.0f * zIndex) / 8388608.0f;
     }
 }

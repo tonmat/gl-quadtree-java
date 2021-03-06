@@ -16,6 +16,8 @@ public class QuadTreeApplication {
     private static final String TITLE = "Quad Tree";
     private static final int WIDTH = 1920;
     private static final int HEIGHT = 1080-64;
+    private static final int QUADTREE_DEPTH = 12;
+    private static final int MAX_ZOOM = 16;
     private long window;
     private FPSMeter fpsMeter;
     private Interval fpsShowInterval;
@@ -94,13 +96,13 @@ public class QuadTreeApplication {
         mouseLastPosition = new Vector3f();
         mouseWorldPosition = new Vector3f();
         mouseWorldLastPosition = new Vector3f();
-        quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * HEIGHT - 2, 0.5f * HEIGHT - 2), 12);
+        quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * HEIGHT - 2, 0.5f * HEIGHT - 2), QUADTREE_DEPTH);
         renderer = new QuadTreeRenderer();
         renderer.update(quadTree);
 
         final var w = WIDTH / 2;
         final var h = HEIGHT / 2;
-        projectionMatrix.ortho(-w, w, -h, h, 0, 1);
+        projectionMatrix.setOrtho(-w, w, -h, h, -1000.0f, 1000.0f);
     }
 
     private void handleScrollCallback(long window, double xoffset, double yoffset) {
@@ -108,10 +110,10 @@ public class QuadTreeApplication {
             if (cameraZoomTarget <= 1)
                 return;
         if (yoffset > 0) {
-            if (cameraZoomTarget >= 16)
+            if (cameraZoomTarget >= MAX_ZOOM)
                 return;
         }
-        cameraZoomTarget = clamp(1, 16, cameraZoomTarget + 0.5f * (float) yoffset * cameraZoomTarget);
+        cameraZoomTarget = clamp(1, MAX_ZOOM, cameraZoomTarget + 0.5f * (float) yoffset * cameraZoomTarget);
     }
 
     private void update(float delta) {
@@ -170,7 +172,6 @@ public class QuadTreeApplication {
     }
 
     private void render() {
-        glClear(GL_COLOR_BUFFER_BIT);
         renderer.render();
     }
 

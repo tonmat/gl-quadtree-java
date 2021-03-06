@@ -34,12 +34,12 @@ public class QuadTreeRenderer {
     }
 
     public void render() {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shaderProgram.bind();
         shaderProgram.setUniformMatrix4f("u_mvp", mvp);
         vao.draw();
         shaderProgram.unbind();
-        glDisable(GL_BLEND);
+        glDisable(GL_DEPTH_TEST);
     }
 }
