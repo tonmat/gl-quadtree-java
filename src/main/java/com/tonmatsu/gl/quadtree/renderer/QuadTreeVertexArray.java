@@ -7,6 +7,7 @@ import org.joml.*;
 import java.nio.*;
 
 import static com.tonmatsu.gl.quadtree.renderer.gl.VertexAttribute.*;
+import static org.joml.Math.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
@@ -23,7 +24,7 @@ public class QuadTreeVertexArray {
         vbo = new VertexBuffer();
         ibo = new IndexBuffer();
         vao = new VertexArray();
-        vao.bindVertexBuffer(vbo, VEC2, VEC4);
+        vao.bindVertexBuffer(vbo, VEC3);
         vao.bindIndexBuffer(ibo);
         recreate(8192);
     }
@@ -60,7 +61,7 @@ public class QuadTreeVertexArray {
         if (vertices != null)
             memFree(vertices);
 
-        vertices = memAlloc(newCapacity * 4 * 24);
+        vertices = memAlloc(newCapacity * 4 * 12);
         vbo.create(vertices.limit(), GL_DYNAMIC_DRAW);
 
         final var indexData = memAlloc(newCapacity * 8 * 4);
@@ -94,10 +95,11 @@ public class QuadTreeVertexArray {
         final var w = quadTree.boundary.west();
         final var n = quadTree.boundary.north();
         final var s = quadTree.boundary.south();
-        vertices.putFloat(w).putFloat(s).putFloat(color.x).putFloat(color.y).putFloat(color.z).putFloat(alpha);
-        vertices.putFloat(e).putFloat(s).putFloat(color.x).putFloat(color.y).putFloat(color.z).putFloat(alpha);
-        vertices.putFloat(e).putFloat(n).putFloat(color.x).putFloat(color.y).putFloat(color.z).putFloat(alpha);
-        vertices.putFloat(w).putFloat(n).putFloat(color.x).putFloat(color.y).putFloat(color.z).putFloat(alpha);
+        final var c = packColor(color.x, color.y, color.z, alpha);
+        vertices.putFloat(w).putFloat(s).putFloat(c);
+        vertices.putFloat(e).putFloat(s).putFloat(c);
+        vertices.putFloat(e).putFloat(n).putFloat(c);
+        vertices.putFloat(w).putFloat(n).putFloat(c);
 
         if (quadTree.divided) {
             add(quadTree.ne);
@@ -105,5 +107,12 @@ public class QuadTreeVertexArray {
             add(quadTree.sw);
             add(quadTree.se);
         }
+    }
+
+    private static float packColor(float r, float g, float b, float a) {
+        return floor(63.0f * r) / 64.0f +
+                floor(63.0f * g) / 4096.0f +
+                floor(63.0f * b) / 262144.0f +
+                floor(31.0f * a) / 8388608.0f;
     }
 }

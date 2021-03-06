@@ -1,7 +1,5 @@
 package com.tonmatsu.gl.quadtree.core;
 
-import static org.joml.Math.*;
-
 public class Circle {
     public final Point center;
     public final float radius;
@@ -16,8 +14,11 @@ public class Circle {
     }
 
     public boolean containsPoint(float pointX, float pointY) {
-        return abs(center.x - pointX) < radius &&
-                abs(center.y - pointY) < radius;
+        final var dx = center.x - pointX;
+        final var dy = center.y - pointY;
+        final var d2 = dx * dx + dy * dy;
+        final var radius2 = radius * radius;
+        return d2 < radius2;
     }
 
     public boolean contains(AABB aabb) {

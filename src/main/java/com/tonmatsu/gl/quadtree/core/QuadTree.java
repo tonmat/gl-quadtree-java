@@ -5,6 +5,7 @@ import org.joml.*;
 import java.util.*;
 
 public class QuadTree {
+    private static final Vector3f COLOR = new Vector3f(0.5f, 0.7f, 0.2f);
     public final AABB boundary;
     public final int maxDepth;
     public final int depth;
@@ -37,7 +38,7 @@ public class QuadTree {
     public boolean insert(Circle circle) {
         if (circle.contains(boundary)) {
             divided = false;
-            this.color = new Vector3f(0.5f, 0.7f, 0.2f);
+            this.color = COLOR;
             return true;
         }
 
@@ -47,7 +48,7 @@ public class QuadTree {
         if (!divided) {
             if (depth == maxDepth) {
                 if (this.color == null) {
-                    this.color = new Vector3f(0.5f, 0.7f, 0.2f);
+                    this.color = COLOR;
                     return true;
                 }
                 return false;
