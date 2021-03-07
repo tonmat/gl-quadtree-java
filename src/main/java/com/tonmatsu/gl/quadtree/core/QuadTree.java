@@ -1,15 +1,10 @@
 package com.tonmatsu.gl.quadtree.core;
 
-import org.joml.*;
-
-import java.util.*;
-
 public class QuadTree {
-    private static final Vector3f COLOR = new Vector3f(0.5f, 0.7f, 0.2f);
     public final AABB boundary;
     public final int maxDepth;
     public final int depth;
-    public Vector3f color;
+    public boolean value;
     public boolean divided;
     public QuadTree nw;
     public QuadTree ne;
@@ -27,7 +22,7 @@ public class QuadTree {
     }
 
     public void clear() {
-        color = null;
+        value = false;
         divided = false;
         nw = null;
         ne = null;
@@ -38,7 +33,7 @@ public class QuadTree {
     public boolean insert(Circle circle) {
         if (circle.contains(boundary)) {
             divided = false;
-            this.color = COLOR;
+            value = true;
             return true;
         }
 
@@ -47,11 +42,8 @@ public class QuadTree {
 
         if (!divided) {
             if (depth == maxDepth) {
-                if (this.color == null) {
-                    this.color = COLOR;
-                    return true;
-                }
-                return false;
+                value = true;
+                return true;
             }
             divide();
         }
@@ -67,7 +59,7 @@ public class QuadTree {
     public boolean remove(Circle circle) {
         if (circle.contains(boundary)) {
             divided = false;
-            this.color = null;
+            value = false;
             return true;
         }
 
@@ -76,11 +68,8 @@ public class QuadTree {
 
         if (!divided) {
             if (depth == maxDepth) {
-                if (this.color != null) {
-                    this.color = null;
-                    return true;
-                }
-                return false;
+                value = false;
+                return true;
             }
             divide();
         }
@@ -106,9 +95,9 @@ public class QuadTree {
             if (nw.divided || ne.divided || sw.divided || se.divided)
                 return;
 
-            if (Objects.equals(nw.color, ne.color) &&
-                    Objects.equals(nw.color, sw.color) &&
-                    Objects.equals(nw.color, se.color)) {
+            if (nw.value == ne.value &&
+                    nw.value == sw.value &&
+                    nw.value == se.value) {
                 undivide();
             }
         }
@@ -132,7 +121,7 @@ public class QuadTree {
         if (divided) {
             return nw.countLeavesWithValue() + ne.countLeavesWithValue() + sw.countLeavesWithValue() + se.countLeavesWithValue();
         }
-        return color != null ? 1 : 0;
+        return value ? 1 : 0;
     }
 
     private void divide() {
@@ -145,18 +134,16 @@ public class QuadTree {
         ne = new QuadTree(new AABB(new Point(x + w, y + h), w, h), maxDepth, newDepth);
         sw = new QuadTree(new AABB(new Point(x - w, y - h), w, h), maxDepth, newDepth);
         se = new QuadTree(new AABB(new Point(x + w, y - h), w, h), maxDepth, newDepth);
-        if (color != null) {
-            nw.color = color;
-            ne.color = color;
-            sw.color = color;
-            se.color = color;
-            color = null;
-        }
+        nw.value = value;
+        ne.value = value;
+        sw.value = value;
+        se.value = value;
+        value = false;
         divided = true;
     }
 
     private void undivide() {
-        color = nw.color;
+        value = nw.value;
         nw = null;
         ne = null;
         sw = null;

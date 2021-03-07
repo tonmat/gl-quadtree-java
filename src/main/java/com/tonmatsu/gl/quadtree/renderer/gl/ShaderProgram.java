@@ -73,6 +73,18 @@ public class ShaderProgram {
         return location;
     }
 
+    public void setUniform1b(String name, boolean b) {
+        final var binded = bind();
+        glUniform1i(getUniformLocation(name), b ? GL_TRUE : GL_FALSE);
+        if (binded) unbind();
+    }
+
+    public void setUniform1i(String name, int i) {
+        final var binded = bind();
+        glUniform1i(getUniformLocation(name), i);
+        if (binded) unbind();
+    }
+
     public void setUniform1f(String name, float f) {
         final var binded = bind();
         glUniform1f(getUniformLocation(name), f);

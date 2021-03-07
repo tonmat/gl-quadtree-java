@@ -1,23 +1,25 @@
 package com.tonmatsu.gl.quadtree;
 
-import static org.joml.Math.*;
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryStack.*;
-import static org.lwjgl.system.MemoryUtil.*;
-
 import com.tonmatsu.gl.quadtree.commons.*;
 import com.tonmatsu.gl.quadtree.core.*;
 import com.tonmatsu.gl.quadtree.renderer.*;
 import org.joml.*;
 import org.lwjgl.opengl.*;
 
+import static org.joml.Math.*;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.system.MemoryStack.*;
+import static org.lwjgl.system.MemoryUtil.*;
+
 public class QuadTreeApplication {
     private static final String TITLE = "Quad Tree";
     private static final int WIDTH = 1920;
-    private static final int HEIGHT = 1080-64;
+    private static final int HEIGHT = 1080 - 64;
+    private static final int QUADTREE_SIZE = 1024;
     private static final int QUADTREE_DEPTH = 12;
     private static final int MAX_ZOOM = 16;
+    private final Vector3f vec3 = new Vector3f();
     private long window;
     private FPSMeter fpsMeter;
     private Interval fpsShowInterval;
@@ -35,7 +37,6 @@ public class QuadTreeApplication {
     private Vector3f mouseWorldLastPosition;
     private QuadTree quadTree;
     private QuadTreeRenderer renderer;
-    private final Vector3f vec3 = new Vector3f();
 
     public static void main(String[] args) {
         new QuadTreeApplication().run();
@@ -96,7 +97,7 @@ public class QuadTreeApplication {
         mouseLastPosition = new Vector3f();
         mouseWorldPosition = new Vector3f();
         mouseWorldLastPosition = new Vector3f();
-        quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * HEIGHT - 2, 0.5f * HEIGHT - 2), QUADTREE_DEPTH);
+        quadTree = new QuadTree(new AABB(new Point(1, 1), 0.5f * QUADTREE_SIZE - 2, 0.5f * QUADTREE_SIZE - 2), QUADTREE_DEPTH);
         renderer = new QuadTreeRenderer();
         renderer.update(quadTree);
 
@@ -143,7 +144,7 @@ public class QuadTreeApplication {
             cameraPositionTarget.zero();
             cameraZoomTarget = 1;
             quadTree.clear();
-            quadTree.color = new Vector3f(0.5f, 0.7f, 0.2f);
+            quadTree.value = true;
             renderer.update(quadTree);
         }
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
